@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>{{ title }}</h1>
+    <a href="{{ url_for('admin.schedules') }}" class="btn">Back to Schedules</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data" class="form-horizontal">
+            {{ form.hidden_tag() }}
+            <div class="form-row">
+                <div class="form-group col-6">
+                    {{ form.job_name.label }}
+                    {{ form.job_name(class="form-control") }}
+                    {% for error in form.job_name.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                </div>
+                <div class="form-group col-6">
+                    {{ form.script_file.label }}
+                    {{ form.script_file(class="form-control") }}
+                    {% if schedule and schedule.script_filename %}
+                    <small>Current: {{ schedule.script_filename }}</small>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-4">
+                    {{ form.schedule_type.label }}
+                    {{ form.schedule_type(class="form-control", id="schedule_type") }}
+                </div>
+                <div class="form-group col-4">
+                    {{ form.schedule_time.label }}
+                    {{ form.schedule_time(class="form-control", placeholder="14:30") }}
+                    {% for error in form.schedule_time.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                </div>
+            </div>
+            <div class="form-row" id="schedule-extra" style="display:none">
+                <div class="form-group col-6">
+                    {{ form.schedule_day.label }}
+                    {{ form.schedule_day(class="form-control", placeholder="e.g. 1-31 for monthly, 0-6 for weekly") }}
+                </div>
+                <div class="form-group col-6">
+                    {{ form.schedule_month.label }}
+                    {{ form.schedule_month(class="form-control", placeholder="e.g. 1-12 for yearly/quarterly") }}
+                </div>
+            </div>
+            <div class="form-row" id="schedule-hourly" style="display:none">
+                <div class="form-group col-4">
+                    {{ form.interval_hours.label }}
+                    {{ form.interval_hours(class="form-control", placeholder="e.g. 3") }}
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-6">
+                    {{ form.viewers.label }}
+                    {{ form.viewers(class="form-control", size="6") }}
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="checkbox-label">
+                    {{ form.is_active() }} {{ form.is_active.label.text }}
+                </label>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
+                <a href="{{ url_for('admin.schedules') }}" class="btn">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const typeSelect = document.getElementById('schedule_type');
+const extraDiv = document.getElementById('schedule-extra');
+const hourlyDiv = document.getElementById('schedule-hourly');
+const hourlyField = document.getElementById('interval_hours');
+function toggleExtra() {
+    const val = typeSelect.value;
+    const showExtra = val && val !== 'once' && val !== 'daily' && val !== 'weekdays' && val !== 'hourly';
+    extraDiv.style.display = showExtra ? 'flex' : 'none';
+    const showHourly = val === 'hourly';
+    hourlyDiv.style.display = showHourly ? 'flex' : 'none';
+    if (hourlyField) hourlyField.required = showHourly;
+}
+typeSelect.addEventListener('change', toggleExtra);
+toggleExtra();
+</script>
+{% endblock %}

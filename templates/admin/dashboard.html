@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Admin Dashboard</h1>
+</div>
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-value">{{ total_schedules }}</div>
+        <div class="stat-label">Total Schedules</div>
+    </div>
+    <div class="stat-card stat-success">
+        <div class="stat-value">{{ active_schedules }}</div>
+        <div class="stat-label">Active Schedules</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ total_runs }}</div>
+        <div class="stat-label">Total Runs</div>
+    </div>
+    <div class="stat-card {% if failed_runs > 0 %}stat-danger{% endif %}">
+        <div class="stat-value">{{ failed_runs }}</div>
+        <div class="stat-label">Failed Runs</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>Recent Runs</h2>
+        <a href="{{ url_for('jobs.history') }}" class="btn btn-sm">View All</a>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Run#</th>
+                    <th>Job</th>
+                    <th>Status</th>
+                    <th>Started</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for run in recent_runs %}
+                <tr>
+                    <td>{{ run.run_number }}</td>
+                    <td>{{ run.job_name }}</td>
+                    <td><span class="badge badge-{{ run.status }}">{{ run.status }}</span></td>
+                    <td>{{ format_datetime(run.started_at) }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="empty">No runs yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

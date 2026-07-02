@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Schedule Management{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Schedule Management</h1>
+    <a href="{{ url_for('admin.schedule_new') }}" class="btn btn-primary">New Schedule</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="GET" class="filter-form">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <input type="text" name="search" class="form-control" placeholder="Search job #, name, script..." value="{{ search }}">
+                </div>
+                <div class="filter-group">
+                    <select name="schedule_type" class="form-control" onchange="this.form.submit()">
+                        {% for val, label in form.schedule_type.choices %}
+                        <option value="{{ val }}" {{ 'selected' if request.args.get('schedule_type') == val }}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <select name="is_active" class="form-control" onchange="this.form.submit()">
+                        {% for val, label in form.is_active.choices %}
+                        <option value="{{ val }}" {{ 'selected' if request.args.get('is_active') == val }}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <button type="submit" class="btn">Filter</button>
+                    <a href="{{ url_for('admin.schedules') }}" class="btn btn-sm">Clear</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-container">
+    <table class="table" id="schedules-table">
+        <thead>
+            <tr>
+                <th class="sortable" data-sort="job_number">Job # <span class="sort-indicator"></span></th>
+                <th class="sortable" data-sort="job_name">Job Name <span class="sort-indicator"></span></th>
+                <th>Script</th>
+                <th>Viewers</th>
+                <th class="sortable" data-sort="schedule_type">Schedule <span class="sort-indicator"></span></th>
+                <th class="sortable" data-sort="schedule_time">Time <span class="sort-indicator"></span></th>
+                <th class="sortable" data-sort="last_run_at">Last Run <span class="sort-indicator"></span></th>
+                <th class="sortable" data-sort="is_active">Active <span class="sort-indicator"></span></th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in schedules %}
+            <tr>
+                <td>{{ s.job_number }}</td>
+                <td>{{ s.job_name }}</td>
+                <td><span class="badge badge-type">{{ s.script_filename }}</span></td>
+                <td>
+                    {% for u in s.viewers[:3] %}
+                    <span class="user-tag">{{ u.username }}</span>
+                    {% endfor %}
+                    {% if s.viewers|length > 3 %}<span class="user-tag">+{{ s.viewers|length - 3 }}</span>{% endif %}
+                </td>
+                <td>{{ s.schedule_type }}</td>
+                <td>{{ s.schedule_time }}</td>
+                <td>{{ format_datetime(s.last_run_at) or 'Never' }}</td>
+                <td><span class="badge badge-{{ 'active' if s.is_active else 'inactive' }}">{{ 'Yes' if s.is_active else 'No' }}</span></td>
+                <td class="actions">
+                    <a href="{{ url_for('admin.schedule_edit', id=s.id) }}" class="btn btn-sm">Edit</a>
+                    <a href="{{ url_for('admin.schedule_download_script', id=s.id) }}" class="btn btn-sm">Download Script</a>
+                    <form method="POST" action="{{ url_for('admin.schedule_run_now', id=s.id) }}" style="display:inline">
+                        <button type="submit" class="btn btn-sm">Run Now</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('admin.schedule_delete', id=s.id) }}" style="display:inline" onsubmit="return confirm('Delete this schedule?')">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="9" class="empty">No schedules found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if pagination.pages > 1 %}
+<div class="pagination">
+    {% if pagination.has_prev %}
+    <a href="{{ url_for('admin.schedules', page=pagination.prev_num, search=search, sort=sort, direction=direction, **request.args) }}" class="btn btn-sm">Previous</a>
+    {% endif %}
+    <span class="page-info">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+    {% if pagination.has_next %}
+    <a href="{{ url_for('admin.schedules', page=pagination.next_num, search=search, sort=sort, direction=direction, **request.args) }}" class="btn btn-sm">Next</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.sortable').forEach(th => {
+    th.addEventListener('click', function() {
+        const sort = this.dataset.sort;
+        const url = new URL(window.location);
+        const currentDir = url.searchParams.get('direction') || 'desc';
+        const newDir = (url.searchParams.get('sort') === sort && currentDir === 'asc') ? 'desc' : 'asc';
+        url.searchParams.set('sort', sort);
+        url.searchParams.set('direction', newDir);
+        window.location = url.toString();
+    });
+});
+</script>
+{% endblock %}

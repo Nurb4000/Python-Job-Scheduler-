@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}User Management{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>User Management</h1>
+    <a href="{{ url_for('admin.user_new') }}" class="btn btn-primary">New User</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="GET" class="filter-form">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <input type="text" name="search" class="form-control" placeholder="Search username or email..." value="{{ search }}">
+                </div>
+                <div class="filter-group">
+                    <button type="submit" class="btn">Search</button>
+                    <a href="{{ url_for('admin.users') }}" class="btn btn-sm">Clear</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-container">
+    <table class="table" id="users-table">
+        <thead>
+            <tr>
+                <th class="sortable" data-sort="username">Username <span class="sort-indicator"></span></th>
+                <th class="sortable" data-sort="email">Email <span class="sort-indicator"></span></th>
+                <th class="sortable" data-sort="is_admin">Admin <span class="sort-indicator"></span></th>
+                <th class="sortable" data-sort="is_active">Active <span class="sort-indicator"></span></th>
+                <th class="sortable" data-sort="created_at">Created <span class="sort-indicator"></span></th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td><span class="badge badge-{{ 'active' if user.is_admin else 'inactive' }}">{{ 'Yes' if user.is_admin else 'No' }}</span></td>
+                <td><span class="badge badge-{{ 'active' if user.is_active else 'inactive' }}">{{ 'Yes' if user.is_active else 'No' }}</span></td>
+                <td>{{ format_datetime(user.created_at) }}</td>
+                <td class="actions">
+                    <a href="{{ url_for('admin.user_edit', id=user.id) }}" class="btn btn-sm">Edit</a>
+                    {% if user.id != current_user.id %}
+                    <form method="POST" action="{{ url_for('admin.user_delete', id=user.id) }}" style="display:inline" onsubmit="return confirm('Delete user {{ user.username }}?')">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="empty">No users found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if pagination.pages > 1 %}
+<div class="pagination">
+    {% if pagination.has_prev %}
+    <a href="{{ url_for('admin.users', page=pagination.prev_num, search=search, sort=sort, direction=direction) }}" class="btn btn-sm">Previous</a>
+    {% endif %}
+    <span class="page-info">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+    {% if pagination.has_next %}
+    <a href="{{ url_for('admin.users', page=pagination.next_num, search=search, sort=sort, direction=direction) }}" class="btn btn-sm">Next</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.sortable').forEach(th => {
+    th.addEventListener('click', function() {
+        const sort = this.dataset.sort;
+        const url = new URL(window.location);
+        const currentDir = url.searchParams.get('direction') || 'desc';
+        const newDir = (url.searchParams.get('sort') === sort && currentDir === 'asc') ? 'desc' : 'asc';
+        url.searchParams.set('sort', sort);
+        url.searchParams.set('direction', newDir);
+        window.location = url.toString();
+    });
+});
+</script>
+{% endblock %}
