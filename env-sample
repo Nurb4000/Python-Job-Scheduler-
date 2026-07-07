@@ -1,0 +1,11 @@
+SECRET_KEY=change-this-to-a-random-secret-key
+DATABASE_URL=sqlite:///python_job_scheduler.db
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=admin123
+TIMEZONE=America/New_York
+SMTP_SERVER=smtp.test.com
+SMTP_PORT=587
+SMTP_USERNAME=smtpusername
+SMTP_PASSWORD=smtppassword
+SMTP_FROM=noreply@example.com
+EMAIL_ENABLED=true
